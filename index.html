@@ -762,11 +762,14 @@
                 </div>
                 
                 <button type="submit" class="w-full bg-accent-red text-dark-primary p-3 rounded-lg font-black uppercase hover:bg-red-400 transition shadow-lg mt-4">
-                    LOGIN / CREATE ACCOUNT
+                    LOGIN
+                </button>
+                <button type="button" id="email-signup-btn" class="w-full bg-dark-primary border border-accent-red text-white p-3 rounded-lg font-bold hover:bg-gray-700 transition">
+                    CREATE NEW ACCOUNT
                 </button>
 
                 <p class="text-center text-sm text-gray-500 pt-2">
-                    <a href="#" class="hover:text-accent-light transition">Forgot Password?</a>
+                    <a href="#" id="forgot-password-link" class="hover:text-accent-light transition">Forgot Password?</a>
                 </p>
             </form>
 
@@ -809,12 +812,12 @@
     <script>
         // --- Firebase Configuration ---
         const firebaseConfig = {
-            apiKey: "AIzaSyAzf3ySF47i0n_T7kiyscgnslOMaJxajzE",
-            authDomain: "nattysplitter-5de8e.firebaseapp.com",
-            projectId: "nattysplitter-5de8e",
-            storageBucket: "nattysplitter-5de8e.firebasestorage.app",
-            messagingSenderId: "852931698553",
-            appId: "1:852931698553:web:6aa6e4a5324964db0ed9a8"
+            apiKey: "AIzaSyBg2avLgKcaOO_r1-3ctVyqA4nvmuv-BRY",
+            authDomain: "natty-splitter.firebaseapp.com",
+            projectId: "natty-splitter",
+            storageBucket: "natty-splitter.firebasestorage.app",
+            messagingSenderId: "529162185603",
+            appId: "1:529162185603:web:ec3e0b3a54c1624bc064b6"
         };
 
         // Initialize Firebase
@@ -934,105 +937,99 @@
         ];
 
         // --- Authentication Functions ---
-        
-        // Initialize authentication state
+
         const initAuth = () => {
             auth.onAuthStateChanged((user) => {
-                if (user) {
-                    // User is signed in
-                    currentUser = user;
-                    currentUserName = user.displayName || user.email || 'Anonymous Athlete';
-                    console.log('User signed in:', currentUserName);
-                    updateUserUI();
-                    setMotivationQuote(nameEl.textContent, currentWorkoutDetails);
-                } else {
-                    // User is signed out
-                    currentUser = null;
-                    currentUserName = null;
-                    console.log('User signed out');
-                    updateUserUI();
-                    setMotivationQuote(nameEl.textContent, currentWorkoutDetails);
-                }
+                currentUser = user || null;
+                currentUserName = user
+                    ? (user.displayName || user.email || 'Athlete')
+                    : null;
+
+                updateUserUI();
+                setMotivationQuote(nameEl.textContent, currentWorkoutDetails);
             });
         };
 
+        const handleAuthError = (action, error) => {
+            console.error(action + ' error:', error);
+            alert(action + ' failed: ' + (error.message || 'Please try again.'));
+        };
+
         // Google Sign In
-        const signInWithGoogle = () => {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider)
-                .then((result) => {
-                    console.log('Google sign in successful');
-                    closeAuthModal();
-                })
-                .catch((error) => {
-                    console.error('Google sign in error:', error);
-                    alert('Failed to sign in with Google: ' + error.message);
-                });
+        const signInWithGoogle = async () => {
+            try {
+                await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+                closeAuthModal();
+            } catch (error) {
+                handleAuthError('Google sign-in', error);
+            }
         };
 
         // Facebook Sign In
-        const signInWithFacebook = () => {
-            const provider = new firebase.auth.FacebookAuthProvider();
-            auth.signInWithPopup(provider)
-                .then((result) => {
-                    console.log('Facebook sign in successful');
-                    closeAuthModal();
-                })
-                .catch((error) => {
-                    console.error('Facebook sign in error:', error);
-                    alert('Failed to sign in with Facebook: ' + error.message);
-                });
+        const signInWithFacebook = async () => {
+            try {
+                await auth.signInWithPopup(new firebase.auth.FacebookAuthProvider());
+                closeAuthModal();
+            } catch (error) {
+                handleAuthError('Facebook sign-in', error);
+            }
         };
 
         // GitHub Sign In
-        const signInWithGitHub = () => {
-            const provider = new firebase.auth.GithubAuthProvider();
-            auth.signInWithPopup(provider)
-                .then((result) => {
-                    console.log('GitHub sign in successful');
-                    closeAuthModal();
-                })
-                .catch((error) => {
-                    console.error('GitHub sign in error:', error);
-                    alert('Failed to sign in with GitHub: ' + error.message);
-                });
+        const signInWithGitHub = async () => {
+            try {
+                await auth.signInWithPopup(new firebase.auth.GithubAuthProvider());
+                closeAuthModal();
+            } catch (error) {
+                handleAuthError('GitHub sign-in', error);
+            }
         };
 
         // Email/Password Sign Up
-        const signUpWithEmail = (email, password) => {
-            auth.createUserWithEmailAndPassword(email, password)
-                .then((result) => {
-                    console.log('Email sign up successful');
-                    closeAuthModal();
-                })
-                .catch((error) => {
-                    console.error('Email sign up error:', error);
-                    alert('Failed to create account: ' + error.message);
-                });
+        const signUpWithEmail = async (email, password) => {
+            try {
+                await auth.createUserWithEmailAndPassword(email, password);
+                closeAuthModal();
+            } catch (error) {
+                handleAuthError('Account creation', error);
+            }
         };
 
         // Email/Password Sign In
-        const signInWithEmail = (email, password) => {
-            auth.signInWithEmailAndPassword(email, password)
-                .then((result) => {
-                    console.log('Email sign in successful');
-                    closeAuthModal();
-                })
-                .catch((error) => {
-                    console.error('Email sign in error:', error);
-                    alert('Failed to sign in: ' + error.message);
-                });
+        const signInWithEmail = async (email, password) => {
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                closeAuthModal();
+            } catch (error) {
+                handleAuthError('Email sign-in', error);
+            }
+        };
+
+        // Password reset email
+        const resetPassword = async () => {
+            const email = document.getElementById('email').value.trim();
+            if (!email) {
+                alert('Enter your email address first, then click Forgot Password.');
+                document.getElementById('email').focus();
+                return;
+            }
+
+            try {
+                await auth.sendPasswordResetEmail(email);
+                alert('Password reset email sent. Check your inbox.');
+            } catch (error) {
+                handleAuthError('Password reset', error);
+            }
         };
 
         // Sign Out
-        const signOut = () => {
-            auth.signOut()
-                .then(() => {
-                    console.log('User signed out successfully');
-                })
-                .catch((error) => {
-                    console.error('Sign out error:', error);
-                });
+        const signOut = async () => {
+            try {
+                await auth.signOut();
+                console.log('User signed out successfully');
+            } catch (error) {
+                handleAuthError('Sign-out', error);
+            }
         };
 
         // --- AI Chat Bot Functions ---
@@ -1285,35 +1282,25 @@
         // Updates the header/footer buttons based on the login state
         const updateUserUI = () => {
             if (currentUser) {
-                const firstName = currentUserName.split(' ')[0];
+                const firstName = (currentUserName || 'Athlete').split(' ')[0];
                 const welcomeText = `Welcome, ${firstName}`;
+
                 headerAuthBtn.textContent = welcomeText;
                 headerAuthBtn.classList.remove('bg-accent-red');
                 headerAuthBtn.classList.add('bg-white', 'text-dark-primary');
-                
+
                 footerAuthBtn.textContent = welcomeText;
                 footerAuthBtn.classList.remove('bg-accent-red');
                 footerAuthBtn.classList.add('bg-white', 'text-dark-primary', 'text-base', 'px-4');
 
-                // If logged in, clicking the button should show profile options
-                headerAuthBtn.removeEventListener('click', openAuthModal);
-                footerAuthBtn.removeEventListener('click', openAuthModal);
-                
-                headerAuthBtn.addEventListener('click', () => {
-                    // Show profile dropdown or sign out option
-                    if (confirm('Do you want to sign out?')) {
-                        signOut();
-                    }
-                });
-                
-                footerAuthBtn.addEventListener('click', () => {
-                    // Show profile dropdown or sign out option
-                    if (confirm('Do you want to sign out?')) {
-                        signOut();
-                    }
-                });
+                // Assign handlers instead of repeatedly adding duplicate listeners.
+                headerAuthBtn.onclick = () => {
+                    if (confirm('Do you want to sign out?')) signOut();
+                };
+                footerAuthBtn.onclick = () => {
+                    if (confirm('Do you want to sign out?')) signOut();
+                };
 
-                // Update user ID display
                 userIdDisplay.textContent = `Your User ID: ${currentUser.uid}`;
             } else {
                 headerAuthBtn.textContent = 'REGISTER';
@@ -1324,10 +1311,8 @@
                 footerAuthBtn.classList.add('bg-accent-red');
                 footerAuthBtn.classList.remove('bg-white', 'text-dark-primary', 'text-base', 'px-4');
 
-                headerAuthBtn.addEventListener('click', openAuthModal);
-                footerAuthBtn.addEventListener('click', openAuthModal);
-
-                // Clear user ID display
+                headerAuthBtn.onclick = openAuthModal;
+                footerAuthBtn.onclick = openAuthModal;
                 userIdDisplay.textContent = '';
             }
         };
@@ -2348,11 +2333,10 @@ NOTES:
             
             // --- Social Login Event Listeners ---
             googleLoginBtn.addEventListener('click', signInWithGoogle);
+            facebookLoginBtn.addEventListener('click', signInWithFacebook);
             githubLoginBtn.addEventListener('click', signInWithGitHub);
 
             // --- Modal Event Listeners ---
-            headerAuthBtn.addEventListener('click', openAuthModal);
-            footerAuthBtn.addEventListener('click', openAuthModal);
             closeModalBtn.addEventListener('click', closeAuthModal);
             authModal.addEventListener('click', (e) => {
                 if (e.target === authModal) {
@@ -2376,29 +2360,39 @@ NOTES:
             calculateCaloriesBtn.addEventListener('click', calculateCalories);
             generateDietBtn.addEventListener('click', generateDietPlan);
 
-            // Email/Password form submission
+            // Email login, separate account creation, and password reset
             const loginForm = document.getElementById('login-form');
-            loginForm.addEventListener('submit', (e) => {
+            const emailSignupBtn = document.getElementById('email-signup-btn');
+            const forgotPasswordLink = document.getElementById('forgot-password-link');
+
+            loginForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
-                const email = document.getElementById('email').value;
+                const email = document.getElementById('email').value.trim();
                 const password = document.getElementById('password').value;
-                
                 if (!email || !password) {
-                    alert('Please enter both email and password');
+                    alert('Please enter both email and password.');
                     return;
                 }
-                
-                // Try to sign in first, if fails then create account
-                signInWithEmail(email, password)
-                    .catch((error) => {
-                        // If sign in fails, try to create account
-                        if (error.code === 'auth/user-not-found') {
-                            signUpWithEmail(email, password);
-                        } else {
-                            alert('Authentication error: ' + error.message);
-                        }
-                    });
+                await signInWithEmail(email, password);
+            });
+
+            emailSignupBtn.addEventListener('click', async () => {
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
+                if (!email || !password) {
+                    alert('Enter an email and password to create your account.');
+                    return;
+                }
+                if (password.length < 6) {
+                    alert('Please use a password with at least 6 characters.');
+                    return;
+                }
+                await signUpWithEmail(email, password);
+            });
+
+            forgotPasswordLink.addEventListener('click', async (e) => {
+                e.preventDefault();
+                await resetPassword();
             });
 
             // Initialize Competition Countdown Timer
